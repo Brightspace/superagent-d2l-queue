@@ -16,7 +16,7 @@ import Auth from 'superagent-d2l-session-auth';
 const RETRY_INTERVAL = 2000;
 const REQUEST_TIMEOUT = 15000;
 
-class RequestUtils {
+class RequestUtils extends {
 
 	_bind( ...handlers ) {
 		handlers.forEach( handler => this[handler] = this[handler].bind( this ) );
