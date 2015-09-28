@@ -2,5 +2,4 @@ language: node_js
 node_js:
 - '0.12'
 sudo: false
-after_success:
-- npm run build
+script: bundle exec npm run build
