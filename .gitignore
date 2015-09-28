@@ -6,6 +6,6 @@ logs
 node_modules
 
 #distributed files
-dist
+lib
 
 
