@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel src/ --out-dir lib/",
+    "build": "eslint src && babel src/ --out-dir lib/",
     "clean-node-modules": "rimraf node_modules"
   },
   "repository": {
@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "babel": "^5.8.23",
+    "babel-eslint": "^3.1.23",
     "eslint": "^1.5.0",
     "rimraf":"^2.4.3"
   }
