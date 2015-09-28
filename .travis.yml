@@ -3,3 +3,11 @@ node_js:
 - '0.12'
 sudo: false
 script: npm run build
+deploy:
+  provider: npm
+  email: d2ltravisdeploy@d2l.com
+  api_key:
+    secure: Ic1CxMmc51y62R7FMQuw5P3R/55E1lR00nOBjqrYpMQHf+e1IDv2lfGgB8ygl7/RM/Z95F8Nuhy1vaULmw+Z1RrO3rIIwZtKFY1rFIwTau/7AwT8hMl8IHyUUxV/iDB2+Kyx85ir1wYiPY8kc8/Veup19HiLhzBn3jCdPrw4m55Bcymh/IehRhMU5UNP2juhp6jESOnu6rK+dydZCh0dxo3sr1mk5JCYSeS51pfLRqOpUFJiFN1UtUC9mUKUPbkiicg+lUjXcwGJP0R/kQ9JCr0yKHTlGsH8kjJBunRpgMtuFFQEWFw2GjkjCWhTcaRg4uyykNaPuWQIzAMax/XIiLi+ZhmQWD7ntnexvUCoG+5kK9pKCAM+BQkDXfb7WRl65fYt10uv99tiRVp/SeaOiEF/n3l2WBbGyc5YFW5NTk8eCSH7rowdOH5tZlCTJE3hucdZVlrJCZosQ+B85stdq+boRdeEMExVStNFfVFxfilxUY9amRXWcP9vOh6GXyFf7o7nT5hONqDP7Q9NukN077eRnJUk+f0aU+hQ7sJYL1mQSC+YrKsR2243LmHn1AIq17M1qCSOCXrLqbGJEmrgIh4Qt5xMBDeNJw+B0klpu4xyiP1Jh4PlirncHfLdZN1WikXZBn4aOyGSYk2EC/I9gi5RAxd8cpDjfzxC2b0NQVM="
+  on:
+    tags: true
+    branch: master
