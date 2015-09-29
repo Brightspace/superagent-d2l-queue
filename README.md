@@ -6,9 +6,6 @@
 
 Uses the superagent library to perform ajax requests. Returns a deferred promises using the Q library.
 
-[![Build status][ci-image]][ci-url]
-
-
 ## Usage
 
 `send( Object )`
