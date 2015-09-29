@@ -13,12 +13,13 @@ Request.send(
 		url: someUrl,
 		method: 'POST',
 		payload: { text: 'Creating some entity' },
-		useQueue: true
+		useQueue: true,
+		auth: sessionAuth
 	}
 );
 ```
 
-**payload** and **useQueue** are optional.
+**payload**, **useQueue**, **auth** are optional.
 
 ```js
 Request.send(
