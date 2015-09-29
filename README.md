@@ -1,6 +1,6 @@
 [![NPM version][npm-image]][npm-url]
 [![Build status][ci-image]][ci-url]
-[![Coverage Status](https://coveralls.io/repos/Brightspace/superagent-d2l-promise-queue/badge.svg?branch=master&service=github)]
+[![Coverage Status](https://coveralls.io/repos/Brightspace/superagent-d2l-promise-queue/badge.svg?branch=master&service=github)](https://coveralls.io/github/Brightspace/superagent-d2l-promise-queue?branch=master)
 
 #Request Queue 
 
@@ -43,6 +43,5 @@ Request.send(
 [npm-image]: https://badge.fury.io/js/superagent-d2l-promise-queue.png
 [ci-url]: https://travis-ci.org/Brightspace/superagent-d2l-promise-queue
 [ci-image]: https://travis-ci.org/Brightspace/superagent-d2l-promise-queue.svg
-[coverage-image]: https://img.shields.io/coveralls/Brightspace/superagent-d2l-promise-queue.svg
-[coverage-url]: https://coveralls.io/r/Brightspace/superagent-d2l-promise-queue?branch=master
+
 
