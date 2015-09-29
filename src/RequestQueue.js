@@ -8,6 +8,7 @@ import Request from 'superagent';
 * send( request ) takes in a request object with the following params:
 * @param {String} url
 * @param {String} method
+* @param {Object} auth ( OPTIONAL )
 * @param {Object} payload (OPTIONAL)
 * @param {Boolean} useQueue (OPTIONAL: If set then requests will queued )
 */
@@ -28,23 +29,32 @@ class RequestQueue {
 		this._bind( 'send', '_handleResponse', '_handleResponseWithQueue', '_retry', '_sendRequest' );
 	}
 
-	_sendRequest( queueItem ) {
-		
-		let self = this;
+	_sendRequest( request ) {
 
-		Request( queueItem.request.method, queueItem.request.url )
-			.use( queueItem.request.auth ? queueItem.request.auth : null )
-			.send( queueItem.request.payload ? queueItem.request.payload : null )
-			.timeout( REQUEST_TIMEOUT )
+		let _handleResponse = this._handleResponse;
+
+		let _request = Request( request.method, request.url )
+							.timeout( REQUEST_TIMEOUT );
+
+		if( request.payload ) {
+			_request
+				.send( request.payload );
+		}
+
+		if( request.auth ) {
+			_request
+				.use( request.auth );
+		}
+
+		if( request.useQueue ) {
+			_handleResponse = this._handleResponseWithQueue;
+		}
+
+		_request
 			.end( ( error, response ) => { 
-
 				if( response && !error ) {
 
-					if( queueItem.request.useQueue ) {
-						self._handleResponseWithQueue( queueItem, response );
-					}else {
-						self._handleResponse( queueItem, response );
-					}
+					_handleResponse( request, response );
 
 					return;
 				}
@@ -52,7 +62,7 @@ class RequestQueue {
 				// Server error( 400, 404, 500, etc ) detected
 				if( error && response ) {
 
-					queueItem.deferred.reject( error );
+					request.deferred.reject( error );
 
 					return;
 				}
@@ -60,14 +70,15 @@ class RequestQueue {
 				// If a timeout happens during a request, invoke .notify() so that .progress() will catch
 				// the notification, causing the application to notify the user that there is a connection
 				// problem. The request will automatically be retried every RETRY_INTERVAL seconds.
-				queueItem.deferred.notify( error );
+				request.deferred.notify( error );
 
-				this._retry( queueItem );
+				this._retry( request );
 			});
 	}
 
 
 	_handleResponse( queueItem, response ) {
+
 		queueItem.deferred.resolve( response.body );
 	}
 
@@ -87,29 +98,30 @@ class RequestQueue {
 		setTimeout( () => { this._sendRequest( queueItem ); }, RETRY_INTERVAL );
 	}
 
+	_createRequestObject( request, deferred ) {
+		return {
+			deferred: deferred,
+			url: request.url,
+			method: request.method,
+			payload: request.payload,
+			auth: request.auth,
+			useQueue: request.useQueue
+		};
+	}
+
 	send( request ) {
 
 		let deferred = Q.defer();
 
 		if( request.useQueue ) {
 
-			this.queue.push( 
-				{ 
-					deferred: deferred,
-					request: request 
-				} 
-			);
+			this.queue.push( this._createRequestObject( request, deferred ) );
 			
 			if( this.queue.length === 1 ) {
 				this._sendRequest( this.queue[0] );
 			}
 		}else {
-			this._sendRequest( 
-				{ 
-					deferred: deferred,
-					request: request 
-				} 
-			);
+			this._sendRequest( this._createRequestObject( request, deferred ) );
 		}
 
 		return deferred.promise;
