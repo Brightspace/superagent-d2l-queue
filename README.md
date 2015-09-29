@@ -1,3 +1,7 @@
+[![NPM version][npm-image]][npm-url]
+[![Build status][ci-image]][ci-url]
+[![Coverage Status][coverage-image]][coverage-url]
+
 #Request Queue 
 
 Uses the superagent library to perform ajax requests. Returns a deferred promises using the Q library.
@@ -35,5 +39,9 @@ Request.send(
 	}
 );
 ```
+[npm-url]: https://npmjs.org/package/superagent-d2l-promise-queue
+[npm-image]: https://badge.fury.io/js/superagent-d2l-promise-queue.png
 [ci-url]: https://travis-ci.org/Brightspace/superagent-d2l-promise-queue
 [ci-image]: https://travis-ci.org/Brightspace/superagent-d2l-promise-queue.svg
+[coverage-image]: https://img.shields.io/coveralls/Brightspace/superagent-d2l-promise-queue.svg
+[coverage-url]: https://coveralls.io/r/Brightspace/superagent-d2l-promise-queue?branch=master

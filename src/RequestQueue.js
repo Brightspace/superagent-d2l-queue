@@ -77,25 +77,25 @@ class RequestQueue {
 	}
 
 
-	_handleResponse( queueItem, response ) {
+	_handleResponse( request, response ) {
 
-		queueItem.deferred.resolve( response.body );
+		request.deferred.resolve( response.body );
 	}
 
-	_handleResponseWithQueue( queueItem, response ) {
+	_handleResponseWithQueue( request, response ) {
 
 		this.queue.shift();	
 
-		this._handleResponse( queueItem, response );
+		this._handleResponse( request, response );
 
 		if( this.queue.length > 0 ) {
 			this._sendRequest( this.queue[0] );
 		}
 	}
 
-	_retry(	queueItem ) {
+	_retry(	request ) {
 
-		setTimeout( () => { this._sendRequest( queueItem ); }, RETRY_INTERVAL );
+		setTimeout( () => { this._sendRequest( request ); }, RETRY_INTERVAL );
 	}
 
 	_createRequestObject( request, deferred ) {
