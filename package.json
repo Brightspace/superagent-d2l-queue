@@ -1,7 +1,7 @@
 {
   "name": "superagent-d2l-promise-queue",
   "description": "Request queue using superagent and Q promise library",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "lib/index.js",
   "scripts": {
     "build": "eslint src && babel src/ --out-dir lib/",
