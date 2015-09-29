@@ -19,7 +19,7 @@ Request.send(
 );
 ```
 
-**payload**, **useQueue**, **auth** are optional.
+**payload**, **useQueue** and **auth** are optional parameters.
 
 ```js
 Request.send(
