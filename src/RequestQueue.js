@@ -2,7 +2,6 @@
 
 import Q from 'q';
 import Request from 'superagent';
-import Auth from 'superagent-d2l-session-auth';
 
 /**
 * Request helper that will send request directly or using a queue depending on the params provided
@@ -16,7 +15,7 @@ import Auth from 'superagent-d2l-session-auth';
 const RETRY_INTERVAL = 2000;
 const REQUEST_TIMEOUT = 15000;
 
-class RequestUtils {
+class RequestQueue {
 
 	_bind( ...handlers ) {
 		handlers.forEach( handler => this[handler] = this[handler].bind( this ) );
@@ -28,13 +27,13 @@ class RequestUtils {
 
 		this._bind( 'send', '_handleResponse', '_handleResponseWithQueue', '_retry', '_sendRequest' );
 	}
-	
+
 	_sendRequest( queueItem ) {
 		
 		let self = this;
 
 		Request( queueItem.request.method, queueItem.request.url )
-			.use( Auth )
+			.use( queueItem.request.auth ? queueItem.request.auth : null )
 			.send( queueItem.request.payload ? queueItem.request.payload : null )
 			.timeout( REQUEST_TIMEOUT )
 			.end( ( error, response ) => { 
@@ -117,6 +116,6 @@ class RequestUtils {
 	}
 }
 
-let _requestUtils = new RequestUtils();
+let _requestQueue = new RequestQueue();
 
-export default _requestUtils;
+export default _requestQueue;
