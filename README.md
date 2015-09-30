@@ -1,8 +1,18 @@
+#Request Queue 
+
 [![NPM version][npm-image]][npm-url]
 [![Build status][ci-image]][ci-url]
 [![Coverage Status](https://coveralls.io/repos/Brightspace/superagent-d2l-promise-queue/badge.svg?branch=master&service=github)](https://coveralls.io/github/Brightspace/superagent-d2l-promise-queue?branch=master)
 
-#Request Queue 
+Request queue that uses Q promise library and superagent. 
+
+## Installation
+
+Install from NPM:
+
+```shell
+npm install superagent-d2l-promise-queue
+```
 
 Uses the superagent library to perform ajax requests. Returns a deferred promises using the Q library.
 
@@ -40,5 +50,4 @@ Request.send(
 [npm-image]: https://badge.fury.io/js/superagent-d2l-promise-queue.png
 [ci-url]: https://travis-ci.org/Brightspace/superagent-d2l-promise-queue
 [ci-image]: https://travis-ci.org/Brightspace/superagent-d2l-promise-queue.svg
-
 
