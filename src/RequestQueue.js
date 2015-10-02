@@ -22,10 +22,10 @@ class RequestQueue {
 		handlers.forEach( handler => this[handler] = this[handler].bind( this ) );
 	}
 
-	constructor( timeout, retry ) {
+	constructor( shouldRetry, timeout ) {
 
 		this.timeout = timeout ? timeout : REQUEST_TIMEOUT;
-		this.shouldRetry = retry ? true : false;
+		this.shouldRetry = shouldRetry ? shouldRetry : true;
 		this.queue = [];
 
 		this._bind( 'send', '_handleResponse', '_handleResponseWithQueue', '_retry', '_sendRequest' );
@@ -135,4 +135,6 @@ class RequestQueue {
 	}
 }
 
-export default RequestQueue;
+export default function( shouldRetry, timeout ) {
+	return new RequestQueue( shouldRetry, timeout );
+}

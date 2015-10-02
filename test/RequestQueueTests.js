@@ -1,6 +1,6 @@
 var assert = require( 'assert' );
 var nock = require( 'nock' );
-var requestQueue = require( '../lib/index' )( 10, true );
+var requestQueue = require( '../lib/index' )( true, 10 );
 var sinon = require( 'sinon' );
 var q = require( 'q' );
 
