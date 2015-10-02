@@ -1,3 +1,8 @@
 'use strict';
 
-module.exports = require( './RequestQueue' );
+module.exports = function( timeout, retry ) {
+	var requestQueue = require( './RequestQueue' );
+	return new requestQueue( timeout, retry );
+};
+
+

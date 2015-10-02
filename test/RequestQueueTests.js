@@ -1,6 +1,6 @@
 var assert = require( 'assert' );
 var nock = require( 'nock' );
-var requestQueue = require( '../lib/RequestQueue' );
+var requestQueue = require( '../lib/index' )( 10, true );
 var sinon = require( 'sinon' );
 var q = require( 'q' );
 
@@ -80,11 +80,11 @@ describe( 'RequestQueue', function() {
 
 		it( 'send get request, expect server timeout, retry request and expect success', function() {
 
-			this.timeout( 20000 );
+			this.timeout( 5000 );
 
 			nock( 'http://test.domain' )
 				.get( '/me' )
-				.delayConnection( 16000 )
+				.delayConnection( 10 )
 				.reply( 200, 'timeout' )
 				.get( '/me' )
 				.reply( 200, { response: SUCCESS_RESPONSE } )

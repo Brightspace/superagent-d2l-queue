@@ -23,8 +23,7 @@
   "homepage": "https://github.com/Brightspace/superagent-d2l-promise-queue",
   "dependencies": {
     "q": "^1.4.1",
-    "superagent": "^1.4.0",
-    "superagent-d2l-session-auth": "^0.13.0"
+    "superagent": "^1.4.0"
   },
   "devDependencies": {
     "babel": "^5.8.23",

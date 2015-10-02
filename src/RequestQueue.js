@@ -22,8 +22,10 @@ class RequestQueue {
 		handlers.forEach( handler => this[handler] = this[handler].bind( this ) );
 	}
 
-	constructor() {
+	constructor( timeout, retry ) {
 
+		this.timeout = timeout ? timeout : REQUEST_TIMEOUT;
+		this.shouldRetry = retry ? true : false;
 		this.queue = [];
 
 		this._bind( 'send', '_handleResponse', '_handleResponseWithQueue', '_retry', '_sendRequest' );
@@ -32,9 +34,8 @@ class RequestQueue {
 	_sendRequest( request ) {
 
 		let _handleResponse = this._handleResponse;
-
 		let _request = Request( request.method, request.url )
-							.timeout( REQUEST_TIMEOUT );
+							.timeout( this.timeout );
 
 		if( request.payload ) {
 			_request
@@ -70,9 +71,15 @@ class RequestQueue {
 				// If a timeout happens during a request, invoke .notify() so that .progress() will catch
 				// the notification, causing the application to notify the user that there is a connection
 				// problem. The request will automatically be retried every RETRY_INTERVAL seconds.
-				request.deferred.notify( error );
 
-				this._retry( request );
+				if( this.shouldRetry ) {
+					request.deferred.notify( error );
+
+					this._retry( request );
+					return;
+				}
+
+				request.deferred.reject( error );
 			});
 	}
 
@@ -128,6 +135,4 @@ class RequestQueue {
 	}
 }
 
-let _requestQueue = new RequestQueue();
-
-export default _requestQueue;
+export default RequestQueue;
