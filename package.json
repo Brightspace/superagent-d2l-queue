@@ -1,7 +1,7 @@
 {
   "name": "superagent-d2l-promise-queue",
   "description": "Request queue using superagent and Q promise library",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "main": "lib/index.js",
   "scripts": {
     "build": "eslint src && babel src/ --out-dir lib/",
@@ -22,8 +22,7 @@
   "license": "Apache-2.0",
   "homepage": "https://github.com/Brightspace/superagent-d2l-promise-queue",
   "dependencies": {
-    "q": "^1.4.1",
-    "superagent": "^1.4.0"
+    "superagent": "^1.2.0"
   },
   "devDependencies": {
     "babel": "^5.8.23",
@@ -34,6 +33,7 @@
     "mocha": "^2.3.3",
     "nock": "^2.13.0",
     "sinon": "^1.17.1",
+    "should": "^7.1.0",
     "rimraf": "^2.4.3"
   }
 }
