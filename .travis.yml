@@ -2,7 +2,7 @@ language: node_js
 node_js:
 - '0.12'
 sudo: false
-after_success: npm deprecate superagent-d2l-promise-queue@0.0.3 "WARNING: This project has been renamed to superagent-d2l-queue. Install using superagent-d2l-queue" 
+after_success: npm run depecrate
 deploy:
   provider: npm
   email: d2ltravisdeploy@d2l.com

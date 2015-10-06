@@ -7,7 +7,8 @@
     "build": "eslint src && babel src/ --out-dir lib/",
     "clean-node-modules": "rimraf node_modules",
     "test": "npm run build && istanbul cover ./node_modules/mocha/bin/_mocha test/*.js -- -R spec",
-    "report-coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage"
+    "report-coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "depecrate": "npm deprecate superagent-d2l-promise-queue@0.0.3 'WARNING: This project has been renamed to superagent-d2l-queue. Install using superagent-d2l-queue' "
   },
   "repository": {
     "type": "git",
