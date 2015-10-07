@@ -46,8 +46,8 @@ Request.send(
 	}
 );
 ```
-[npm-url]: https://npmjs.org/package/superagent-d2l-promise-queue
-[npm-image]: https://badge.fury.io/js/superagent-d2l-promise-queue.png
-[ci-url]: https://travis-ci.org/Brightspace/superagent-d2l-promise-queue
-[ci-image]: https://travis-ci.org/Brightspace/superagent-d2l-promise-queue.svg
+[npm-url]: https://npmjs.org/package/superagent-d2l-queue
+[npm-image]: https://badge.fury.io/js/superagent-d2l-queue.png
+[ci-url]: https://travis-ci.org/Brightspace/superagent-d2l-queue
+[ci-image]: https://travis-ci.org/Brightspace/superagent-d2l-queue.svg
 
