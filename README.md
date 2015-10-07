@@ -11,6 +11,8 @@ Extends Superagent by adding the ability to queue up requests and retry failed r
 Install from NPM:
 
 ```shell
+npm install superagent
+
 npm install superagent-d2l-queue
 ```
 
@@ -26,7 +28,7 @@ Every request that has this specified will be queued up.
 
 `retryOnConnectionFailure( handler )`
 
-When a request fails due to a timeout or connection failure the request will be retried every 2 seconds until it can successfully send the request. A hanlder function can be specified in order to complete some action whenever a timeout occurs. This handler is optional.
+When a request fails due to a timeout or connection failure the request will be retried every 2 seconds until it can successfully send the request. A handler function can be specified in order to complete some action whenever a timeout occurs. This handler is optional.
 
 ```js
 import Request from 'superagent';
