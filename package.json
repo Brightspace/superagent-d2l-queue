@@ -1,6 +1,6 @@
 {
-  "name": "superagent-d2l-promise-queue",
-  "description": "Request queue using superagent and Q promise library",
+  "name": "superagent-d2l-queue",
+  "description": "Request queue extension on superagent",
   "version": "1.0.0",
   "main": "lib/index.js",
   "scripts": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Brightspace/superagent-d2l-promise-queue.git"
+    "url": "https://github.com/Brightspace/superagent-d2l-queue.git"
   },
   "keywords": [
     "d2l",
@@ -20,7 +20,7 @@
   ],
   "author": "D2L Corporation",
   "license": "Apache-2.0",
-  "homepage": "https://github.com/Brightspace/superagent-d2l-promise-queue",
+  "homepage": "https://github.com/Brightspace/superagent-d2l-queue",
   "dependencies": {
     "superagent": "^1.2.0"
   },
