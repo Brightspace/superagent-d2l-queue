@@ -12,8 +12,6 @@ Extends Superagent by adding the ability to queue up requests and retry failed r
 Install from NPM:
 
 ```shell
-npm install superagent
-
 npm install superagent-d2l-queue
 ```
 
