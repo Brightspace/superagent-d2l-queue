@@ -3,6 +3,7 @@
 [![NPM version][npm-image]][npm-url]
 [![Build status][ci-image]][ci-url]
 [![Coverage Status][coverage-image]][coverage-url]
+[![Dependency Status][dependencies-image]][dependencies-url]
 
 Extends Superagent by adding the ability to queue up requests and retry failed requests due to timeouts.
 
@@ -52,4 +53,5 @@ Request
 [ci-image]: https://img.shields.io/travis-ci/Brightspace/superagent-d2l-queue.svg
 [coverage-url]: https://coveralls.io/r/Brightspace/superagent-d2l-queue?branch=master
 [coverage-image]: https://img.shields.io/coveralls/Brightspace/superagent-d2l-queue.svg
-
+[dependencies-url]: https://david-dm.org/brightspace/superagent-d2l-queue
+[dependencies-image]: https://img.shields.io/david/Brightspace/superagent-d2l-queue.svg
