@@ -55,7 +55,7 @@ function RequestQueue( superAgent ) {
 		let gatewayOrServiceUnavailable =
 				err.status && ( err.status === 502 || err.status === 503 || err.status === 504 );
 
-		let requestTimedOut = TIMEOUT_REGEX.test( err );
+		let requestTimedOut = TIMEOUT_REGEX.test( err ) || err.code ==='ECONNABORTED';
 
 		if ( gatewayOrServiceUnavailable || requestTimedOut ) {
 			RETRY_TIMEOUT = 2000;

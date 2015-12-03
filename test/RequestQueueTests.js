@@ -89,25 +89,20 @@ describe( 'RequestQueue', function() {
 			retryRequests = 0;
 		})
 
-		it( 'no queue ', function( done ) {
+		it( 'no queue, 3 concurrent succesfull requests ', function( done ) {
 
 			this.timeout( 10000 );
 
 			var requestsLeft = 3;
 
-			var concurrencyChecker = setInterval( function() {
-				concurrentRequests.should.equal( 3 );
-			}, 200 );
+			var concurrencyChecker = getConcurrencyChecker( 3 );
 
 			superagent
 				.get( 'http://localhost:5000/successWithDelay' )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					requestsLeft--;
-					if ( requestsLeft === 0 ) {
-						done();
-						clearInterval( concurrencyChecker );
-					}
+					closeTestIfNoRequests( requestsLeft, done, concurrencyChecker );
 				});
 
 			superagent
@@ -115,10 +110,7 @@ describe( 'RequestQueue', function() {
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					requestsLeft--;
-					if ( requestsLeft === 0 ) {
-						done();
-						clearInterval( concurrencyChecker );
-					}
+					closeTestIfNoRequests( requestsLeft, done, concurrencyChecker );
 				});
 
 			superagent
@@ -126,22 +118,17 @@ describe( 'RequestQueue', function() {
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					requestsLeft--;
-					if ( requestsLeft === 0 ) {
-						done();
-						clearInterval( concurrencyChecker );
-					}
+					closeTestIfNoRequests( requestsLeft, done, concurrencyChecker );
 				});
 		});
 
-		it( 'use queue', function( done ) {
+		it( 'use queue, expect 1 concurrent request', function( done ) {
 
 			this.timeout( 10000 );
 
 			var requestsLeft = 5;
 
-			var concurrencyChecker = setInterval( function() {
-				concurrentRequests.should.equal( 1 );
-			}, 200 );
+			var concurrencyChecker = getConcurrencyChecker( 1 );
 
 			superagent
 				.get( 'http://localhost:5000/successWithDelay' )
@@ -149,8 +136,7 @@ describe( 'RequestQueue', function() {
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
-					requestsLeft.should.equal( 4 );
-					res.text.should.equal( SUCCESS_RESPONSE );
+					assertSuccessAndRequestsLeft( requestsLeft, 4, res.text );
 				});
 
 			superagent
@@ -159,8 +145,7 @@ describe( 'RequestQueue', function() {
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
-					requestsLeft.should.equal( 3 );
-					res.text.should.equal( SUCCESS_RESPONSE );
+				assertSuccessAndRequestsLeft( requestsLeft, 3, res.text );
 				});
 
 			superagent
@@ -169,8 +154,7 @@ describe( 'RequestQueue', function() {
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
-					requestsLeft.should.equal( 2 );
-					res.text.should.equal( SUCCESS_RESPONSE );
+					assertSuccessAndRequestsLeft( requestsLeft, 2, res.text );
 				});
 
 			superagent
@@ -179,8 +163,7 @@ describe( 'RequestQueue', function() {
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
-					requestsLeft.should.equal( 1 );
-					res.text.should.equal( SUCCESS_RESPONSE );
+					assertSuccessAndRequestsLeft( requestsLeft, 1, res.text );
 				});
 
 			superagent
@@ -189,8 +172,7 @@ describe( 'RequestQueue', function() {
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
-					requestsLeft.should.equal( 0 );
-					res.text.should.equal( SUCCESS_RESPONSE );
+					assertSuccessAndRequestsLeft( requestsLeft, 0, res.text );
 					clearInterval( concurrencyChecker );
 					done();
 				});
@@ -205,7 +187,7 @@ describe( 'RequestQueue', function() {
 				.useQueue()
 				.end( function( err, res ) {
 					failureCount++;
-					err.status.should.equal( 404 );
+					assert404andFailureCount( failureCount, 1, err.status );
 				});
 
 			superagent
@@ -213,7 +195,7 @@ describe( 'RequestQueue', function() {
 				.useQueue()
 				.end( function( err, res ) {
 					failureCount++;
-					err.status.should.equal( 404 );
+					assert404andFailureCount( failureCount, 2, err.status );
 				});
 
 			superagent
@@ -221,7 +203,7 @@ describe( 'RequestQueue', function() {
 				.useQueue()
 				.end( function( err, res ) {
 					failureCount++;
-					err.status.should.equal( 404 );
+					assert404andFailureCount( failureCount, 3, err.status );
 				});
 
 			superagent
@@ -229,17 +211,16 @@ describe( 'RequestQueue', function() {
 				.useQueue()
 				.end( function( err, res ) {
 					failureCount++;
-					failureCount.should.equal( 4 );
-					err.status.should.equal( 404 );
+					assert404andFailureCount( failureCount, 4, err.status );
 					done();
 				});
 		});
 
-		it( 'use queue, request timedout', function( done ) {
+		it( 'use queue, request timedout, expect successful retry', function( done ) {
 
 			this.timeout( 10000 );
 
-			var handler = function( err ) {
+			var retryHandler = function( err ) {
 				err.code.should.equal( TIMEOUT_RESPONSE );
 			}
 
@@ -247,7 +228,7 @@ describe( 'RequestQueue', function() {
 				.get( 'http://localhost:5000/timeout' )
 				.useQueue()
 				.timeout( 100 )
-				.retryOnConnectionFailure( handler )
+				.retryOnConnectionFailure( retryHandler )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
@@ -255,29 +236,29 @@ describe( 'RequestQueue', function() {
 		})
 
 
-		it( 'no queue, request timedout', function( done ) {
+		it( 'no queue, request timedout, expect successful retry', function( done ) {
 
 			this.timeout( 10000 );
 
-			var handler = function( err ) {
+			var retryHandler = function( err ) {
 				err.code.should.equal( TIMEOUT_RESPONSE );
 			}
 
 			superagent
 				.get( 'http://localhost:5000/timeout' )
 				.timeout( 100 )
-				.retryOnConnectionFailure( handler )
+				.retryOnConnectionFailure( retryHandler )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
 				});
 		})
 
-		it( 'use queue, gateway error', function( done ) {
+		it( 'use queue, gateway error, expect successful retry', function( done ) {
 
 			this.timeout( 10000 );
 
-			var handler = function( err ) {
+			var retryHandler = function( err ) {
 				err.status.should.equal( 503 );
 
 			}
@@ -286,11 +267,34 @@ describe( 'RequestQueue', function() {
 				.get( 'http://localhost:5000/gatewayFailure' )
 				.useQueue()
 				.timeout( 100 )
-				.retryOnConnectionFailure( handler )
+				.retryOnConnectionFailure( retryHandler )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
 				});
 		})
+
+		function assert404andFailureCount( failureCount, expectedFailureCount, status ) {
+			failureCount.should.equal( expectedFailureCount );
+			status.should.equal( 404 );
+		}
+
+		function assertSuccessAndRequestsLeft( requestsLeft, expectedRequestsLeft, response ) {
+			requestsLeft.should.equal( expectedRequestsLeft );
+			response.should.equal( SUCCESS_RESPONSE );
+		}
+
+		function getConcurrencyChecker( expectedConcurrency ) {
+			return setInterval( function() {
+				concurrentRequests.should.equal( expectedConcurrency );
+			}, 200 );
+		}
+
+		function closeTestIfNoRequests( requestsLeft, done, concurrencyChecker ) {
+			if ( requestsLeft === 0 ) {
+				done();
+				clearInterval( concurrencyChecker );
+			}
+		}
 	});
 });
