@@ -16,9 +16,13 @@ function RequestQueue( superAgent ) {
 	//HACK to Reset request to allow retry
 	function _resetRequest( request, timeout ) {
 
-		let headers = request.req._headers;
+		let headers = {};
 
-		request.req.abort();
+		if ( request.req ) {
+			headers = request.req ? request.req._headers : {};
+			request.req.abort();
+		}
+
 		request.called = false;
 		request.timeout( timeout );
 
@@ -26,6 +30,7 @@ function RequestQueue( superAgent ) {
 		delete request._aborted;
 		delete request.timedout;
 		delete request.req;
+		delete request.xhr;
 
 		let headerKeys = Object.keys( headers );
 
