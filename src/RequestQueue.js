@@ -1,34 +1,78 @@
-'use strict'; 
+'use strict';
 
 import SuperAgent from 'superagent';
 
 function RequestQueue( superAgent ) {
-	
+
 	let Request = superAgent.Request;
 	let superAgentEnd = Request.prototype.end;
-
 	let queue = [];
 
-	//Reset request to allow retry
-	function reset( obj, timeout ) {
-		
-		delete obj.xhr;
-		delete obj._timer;
-		delete obj.aborted;
-		delete obj.timedout;
-		delete obj.timeout;
+	const TIMEOUT_REGEX = /timeout of \d+ms exceeded/;
+	const CORS_REGEX = /Origin is not allowed by Access-Control-Allow-Origin/;
 
-		obj.timeout( timeout );
-	}
+	let RETRY_TIMEOUT;
 
-	function handleConnError( connErrorHandler, err ) {
-		
-		if( connErrorHandler ) {
-			connErrorHandler( err );
+	//HACK to Reset request to allow retry
+	function _resetRequest( request, timeout ) {
+
+		let headers = request.req._headers;
+
+		request.req.abort();
+		request.called = false;
+		request.timeout( timeout );
+
+		delete request._timer;
+		delete request._aborted;
+		delete request.timedout;
+		delete request.req;
+
+		let headerKeys = Object.keys( headers );
+
+		for( let i = 0; i < headerKeys.length; i++ ) {
+			request.set( headerKeys[i], headers[headerKeys[i]] );
 		}
 	}
 
-	function pop() {
+	function _returnResponse( fn, err, res ) {
+		if ( fn ) {
+			fn( err, res );
+		}
+	}
+
+	function _handleConnectionError( connectionErrorHandler, err ) {
+		if ( connectionErrorHandler ) {
+			connectionErrorHandler( err );
+		}
+	}
+
+	function _shouldAttempRetry( err, retryEnabled ) {
+
+		if ( !retryEnabled || !err) {
+			return false;
+		}
+
+		let gatewayOrServiceUnavailable =
+				err.status && ( err.status === 502 || err.status === 503 || err.status === 504 );
+
+		let requestTimedOut = TIMEOUT_REGEX.test( err );
+
+		if ( gatewayOrServiceUnavailable || requestTimedOut ) {
+			RETRY_TIMEOUT = 2000;
+			return true;
+		}
+
+		let corsError = CORS_REGEX.test( err );
+
+		if ( corsError ) {
+			RETRY_TIMEOUT = 5000;
+			return true;
+		}
+
+		return false;
+	}
+
+	function _sendNextRequest() {
 
 		let item = queue[0];
 
@@ -36,39 +80,33 @@ function RequestQueue( superAgent ) {
 			return;
 		}
 
-		let obj = item.obj;
-		let fn = item.fn;
-		let connErrorHandler = item.connErrorHandler;
-		let timeout = obj._timeout;
+		_sendRequest( item.request, item.fn, item.timeout );
+	}
 
-		superAgentEnd.call( obj, ( err, res ) => {
+	function _sendRequest( request, fn, timeout ) {
 
-			if ( res ) {
+		superAgentEnd.call( request, ( err, res ) => {
 
-				fn && fn( err, res );
-				
-				if( !err ) {
-					
-					queue.shift();
-					pop();
-				}
-			} else {
+			if ( _shouldAttempRetry( err, request.retryEnabled ) ) {
 
-				if( obj.shouldRetry ) {
+				_handleConnectionError( request.connectionErrorHandler, err );
 
-					handleConnError( connErrorHandler, err );
+				setTimeout( function() {
+					_resetRequest( request, timeout );
+					_sendRequest( request, fn, request._timeout );
+				}, RETRY_TIMEOUT );
 
-				 	setTimeout( function() {
-				 		reset( obj, timeout );
-				 		pop();
-				 	}, 2000 );
+				return;
+			}
 
-				}else {
-					fn && fn( err, res );
-				}
+			_returnResponse( fn, err, res );
 
+			if ( request.queueRequest ) {
+				queue.shift();
+				_sendNextRequest();
 			}
 		});
+
 	}
 
 	Request.prototype.useQueue = function () {
@@ -76,46 +114,35 @@ function RequestQueue( superAgent ) {
 		return this;
 	};
 
-	Request.prototype.retryOnConnectionFailure = function( connErrorHandler ) {
-		this.shouldRetry = true;
-		this.connErrorHandler = connErrorHandler;
+	Request.prototype.retryOnConnectionFailure = function( connectionErrorHandler ) {
+		this.retryEnabled = true;
+		this.connectionErrorHandler = connectionErrorHandler;
 		return this;
 	};
 
-	Request.prototype.end = function (fn) {
+	Request.prototype.end = function( fn ) {
 
 		let self = this;
 		let queueRequest = self.queueRequest;
 
 		if ( queueRequest ) {
+
 			queue.push(
-				{ 
-					obj: self,  
-					fn: fn, 
-					connErrorHandler: self.connErrorHandler
+				{
+					request: self,
+					fn: fn,
+					timeout: self._timeout
 				}
 			);
 
-			if (queue.length === 1) {
-				pop();
+			if ( queue.length === 1 ) {
+				_sendNextRequest();
 			}
-		} else {
-			superAgentEnd.call(this, function( err, res ) {
 
-				if( !res && self.shouldRetry ) {
-
-					handleConnError( self.connErrorHandler, err );
-
-				 	setTimeout( function() {
-				 		reset( self, self._timeout );
-				 		self.end( fn );
-				 	}, 2000 );
-					
-				}else {
-					fn && fn( err, res );
-				}
-			});
+			return;
 		}
+
+		_sendRequest( self, fn, self._timeout );
 	};
 }
 
