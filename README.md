@@ -1,4 +1,4 @@
-#Request Queue 
+#Request Queue
 
 [![NPM version][npm-image]][npm-url]
 [![Build status][ci-image]][ci-url]
@@ -15,15 +15,13 @@ Install from NPM:
 npm install superagent-d2l-queue
 ```
 
-Uses the superagent library to perform ajax requests. Returns a deferred promises using the Q library.
-
 ## Usage
 
 Added functions:
 
 `useQueue()`
 
-Every request that has this specified will be queued up. 
+Every request that has this specified will be queued up.
 
 `retryOnConnectionFailure( handler )`
 
