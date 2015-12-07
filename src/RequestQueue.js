@@ -19,7 +19,7 @@ function RequestQueue( superAgent ) {
 		let headers = {};
 
 		if ( request.req ) {
-			headers = request.req ? request.req._headers : {};
+			headers = request.req._headers;
 			request.req.abort();
 		}
 
