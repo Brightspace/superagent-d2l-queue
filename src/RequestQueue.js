@@ -11,7 +11,13 @@ function RequestQueue( superAgent ) {
 	const TIMEOUT_REGEX = /timeout of \d+ms exceeded/;
 	const CORS_REGEX = /Origin is not allowed by Access-Control-Allow-Origin/;
 
-	let RETRY_TIMEOUT;
+	const EXP_FACTOR = 1.4;
+	const MAX_EXP_DROPOFF = 15;
+	const MAX_INITIAL_TIMEOUT_REPEAT = 5;
+
+	let initialRetryTimeout;
+	let retryCount = 0;
+	let repeatCount = 0;
 
 	//HACK to Reset request to allow retry
 	function _resetRequest( request, timeout ) {
@@ -27,6 +33,8 @@ function RequestQueue( superAgent ) {
 		request.timeout( timeout );
 
 		delete request._timer;
+		delete request.timer;
+		delete request.aborted;
 		delete request._aborted;
 		delete request.timedout;
 		delete request.req;
@@ -63,14 +71,14 @@ function RequestQueue( superAgent ) {
 		let requestTimedOut = TIMEOUT_REGEX.test( err ) || err.code ==='ECONNABORTED';
 
 		if ( gatewayOrServiceUnavailable || requestTimedOut ) {
-			RETRY_TIMEOUT = 2000;
+			initialRetryTimeout = 2000;
 			return true;
 		}
 
 		let corsError = CORS_REGEX.test( err );
 
 		if ( corsError ) {
-			RETRY_TIMEOUT = 5000;
+			initialRetryTimeout = 5000;
 			return true;
 		}
 
@@ -88,6 +96,10 @@ function RequestQueue( superAgent ) {
 		_sendRequest( item.request, item.fn, item.timeout );
 	}
 
+	function _getTimeout( retryCount ) {
+		return Math.round( initialRetryTimeout * Math.pow( 1.5, retryCount ) );
+	}
+
 	function _sendRequest( request, fn, timeout ) {
 
 		superAgentEnd.call( request, ( err, res ) => {
@@ -96,13 +108,24 @@ function RequestQueue( superAgent ) {
 
 				_handleConnectionError( request.connectionErrorHandler, err );
 
+				if ( repeatCount !== MAX_INITIAL_TIMEOUT_REPEAT ) {
+					repeatCount = repeatCount = repeatCount + 1;
+				}else if ( retryCount !== MAX_EXP_DROPOFF ) {
+					retryCount = retryCount + 1;
+				}
+
+				let retryTimeout = _getTimeout( retryCount );
+
 				setTimeout( function() {
 					_resetRequest( request, timeout );
 					_sendRequest( request, fn, request._timeout );
-				}, RETRY_TIMEOUT );
+				}, retryTimeout );
 
 				return;
 			}
+
+			repeatCount = 0;
+			retryCount = 0;
 
 			_returnResponse( fn, err, res );
 
