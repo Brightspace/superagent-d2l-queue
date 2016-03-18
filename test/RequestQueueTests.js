@@ -1,17 +1,20 @@
-var superagent = require( 'superagent' ),
-	should = require( 'should' ),
-	sinon = require( 'sinon' ),
-	express = require( 'express' );
+'use strict';
 
-var SUCCESS_RESPONSE = 'SUCCESS';
-var ERROR_RESPONSE = 'ERROR';
-var TIMEOUT_RESPONSE = 'ECONNABORTED';
+const superagent = require( 'superagent' );
+const should = require( 'should' );
+const sinon = require( 'sinon' );
+const express = require( 'express' );
+const superagentQueue = require('../lib');
 
-var shouldTimeout;
-var concurrentRequests;
-var retryRequests;
+const SUCCESS_RESPONSE = 'SUCCESS';
+const ERROR_RESPONSE = 'ERROR';
+const TIMEOUT_RESPONSE = 'ECONNABORTED';
 
-var app = express();
+let shouldTimeout;
+let concurrentRequests;
+let retryRequests;
+
+const app = express();
 app.listen( 5000 );
 
 app.get( '/successWithDelay', function( req, res ) {
@@ -45,46 +48,31 @@ app.get( '/gatewayFailure', function( req, res ) {
 describe( 'RequestQueue', function() {
 
 	describe( 'Invocation Tests', function() {
-		it( 'adds queue', function() {
-			( undefined == superagent.Request.prototype.queue ).should.be.true;
-		    require('../lib/index');
-	   		(undefined == superagent.Request.prototype.queue).should.be.false;
-		});
-
-		it( 'adds retryOnConnError', function() {
-			( undefined == superagent.Request.prototype.retryOnConnectionFailure ).should.be.true;
-		    require('../lib/index');
-	   		(undefined == superagent.Request.prototype.retryOnConnectionFailure ).should.be.false;
-		});
 
 		it( 'add retryOnConnectionFailure handler', function() {
-			 require('../lib/index');
-
 			 var handler = function() { var i = 1; };
 
 			 var request = superagent
-			 					.get( '/' )
-			 					.retryOnConnectionFailure( handler );
+							.get( '/' )
+							.use( superagentQueue() )
+							.retryOnConnectionFailure( handler );
 
 			 request.retryEnabled.should.be.true;
 			 request.connectionErrorHandler.should.equal( handler );
 		});
 
 		it( 'add queue', function() {
-			require( '../lib/index' );
-
 			var request = superagent
 							.get( '/' )
-							.useQueue();
+							.use( superagentQueue( { queue: [] } ) )
 
-			request.queueRequest.should.be.true;
+			request.queue.should.not.be.null;
 		});
 	});
 
 	describe( 'Request Tests', function() {
 
 		beforeEach( function() {
-			require( '../lib/index' );
 			concurrentRequests = 0;
 			retryRequests = 0;
 		})
@@ -130,9 +118,10 @@ describe( 'RequestQueue', function() {
 
 			var concurrencyChecker = getConcurrencyChecker( 1 );
 
+			const queue = [];
 			superagent
 				.get( 'http://localhost:5000/successWithDelay' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
@@ -141,7 +130,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/successWithDelay' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
@@ -150,7 +139,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/successWithDelay' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
@@ -159,7 +148,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/successWithDelay' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
@@ -168,7 +157,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/successWithDelay' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					requestsLeft--;
 					concurrentRequests--;
@@ -181,10 +170,11 @@ describe( 'RequestQueue', function() {
 		it( 'use queue and 404 response, expect 4 failures', function( done ) {
 
 			var failureCount = 0;
+			const queue = [];
 
 			superagent
 				.get( 'http://localhost:5000/faiure' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					failureCount++;
 					assert404andFailureCount( failureCount, 1, err.status );
@@ -192,7 +182,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/faiure' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					failureCount++;
 					assert404andFailureCount( failureCount, 2, err.status );
@@ -200,7 +190,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/faiure' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					failureCount++;
 					assert404andFailureCount( failureCount, 3, err.status );
@@ -208,7 +198,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/faiure' )
-				.useQueue()
+				.use( superagentQueue( { queue } ) )
 				.end( function( err, res ) {
 					failureCount++;
 					assert404andFailureCount( failureCount, 4, err.status );
@@ -216,7 +206,7 @@ describe( 'RequestQueue', function() {
 				});
 		});
 
-		it( 'use queue, request timedout, expect successful retry', function( done ) {
+		it( 'use queue, request timed-out, expect successful retry', function( done ) {
 
 			this.timeout( 10000 );
 
@@ -226,9 +216,9 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/timeout' )
-				.useQueue()
-				.timeout( 100 )
+				.use( superagentQueue( { queue: [] } ) )
 				.retryOnConnectionFailure( retryHandler )
+				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
@@ -236,7 +226,7 @@ describe( 'RequestQueue', function() {
 		})
 
 
-		it( 'no queue, request timedout, expect successful retry', function( done ) {
+		it( 'no queue, request timed-out, expect successful retry', function( done ) {
 
 			this.timeout( 10000 );
 
@@ -246,8 +236,9 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/timeout' )
-				.timeout( 100 )
+				.use( superagentQueue() )
 				.retryOnConnectionFailure( retryHandler )
+				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
@@ -258,16 +249,15 @@ describe( 'RequestQueue', function() {
 
 			this.timeout( 10000 );
 
-			var retryHandler = function( err ) {
+			const retryHandler = function( err ) {
 				err.status.should.equal( 503 );
-
 			}
 
 			superagent
 				.get( 'http://localhost:5000/gatewayFailure' )
-				.useQueue()
-				.timeout( 100 )
+				.use( superagentQueue( { queue: [] } ) )
 				.retryOnConnectionFailure( retryHandler )
+				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
