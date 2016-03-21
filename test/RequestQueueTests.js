@@ -118,7 +118,7 @@ describe( 'RequestQueue', function() {
 
 			var concurrencyChecker = getConcurrencyChecker( 1 );
 
-			const queue = [];
+			const queue = superagentQueue.makeQueue();
 			superagent
 				.get( 'http://localhost:5000/successWithDelay' )
 				.use( superagentQueue( { queue } ) )
@@ -170,7 +170,7 @@ describe( 'RequestQueue', function() {
 		it( 'use queue and 404 response, expect 4 failures', function( done ) {
 
 			var failureCount = 0;
-			const queue = [];
+			const queue = superagentQueue.makeQueue();
 
 			superagent
 				.get( 'http://localhost:5000/faiure' )

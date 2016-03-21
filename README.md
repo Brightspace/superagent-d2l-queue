@@ -38,7 +38,7 @@ __Options (defaults):__
 All parameters are optional
 ```js
 {
-    queue: undefined, // Array
+    queue: undefined, // use `superagentQueue.makeQueue()``
     initialTimeout: 2000,
     backoff: {
         exp: { // Exponential backoff
@@ -53,7 +53,7 @@ All parameters are optional
 }
 ```
 
-### `superagentQueue( { queue: [...] } )`
+### `superagentQueue( { queue: superagentQueue.makeQueue() } )`
 Specify an Array that will be used as a queue to chain multiple Superagent requests. Only one request will execute at a time. This is similar to what can be done with libraries such as [Q](https://github.com/kriskowal/q).
 
 ```js
@@ -62,7 +62,7 @@ const superagentQueue = require('superagent-d2l-queue');
 
 // ...
 
-const queue = [];
+const queue = superagentQueue.makeQueue();
 
 const first = request
     .get( ... )

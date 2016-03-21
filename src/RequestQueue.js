@@ -9,11 +9,11 @@ function requestQueue( params ) {
 		queue: undefined, // Array
 		initialTimeout: 2000,
 		backoff: {
-            exp: {
-                factor: 1.4
-            },
-            retries: 5,
-            override: _computeWaitPeriod
+			exp: {
+				factor: 1.4
+			},
+			retries: 5,
+			override: _computeWaitPeriod
 		}
 	}, params );
 
@@ -21,9 +21,9 @@ function requestQueue( params ) {
 
 	let retryCount = 0;
 
-    function _computeWaitPeriod( retryCount ) {
+	function _computeWaitPeriod( retryCount ) {
 		return Math.round( options.initialTimeout *
-            Math.pow( options.backoff.exp.factor, retryCount ) );
+			Math.pow( options.backoff.exp.factor, retryCount ) );
 	}
 
 	function _resetRequest( request, timeout ) {
@@ -136,8 +136,14 @@ function requestQueue( params ) {
 	return this;
 }
 
-module.exports = function(params) {
-  return function(request) {
-      return requestQueue.call(request, params);
-  };
+function create(params) {
+	return function(request) {
+		return requestQueue.call(request, params);
+	};
 };
+
+create.makeQueue = function() {
+	return [];
+};
+
+module.exports = create;
