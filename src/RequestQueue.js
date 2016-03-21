@@ -1,25 +1,31 @@
 'use strict';
 
-import SuperAgent from 'superagent';
+const retry = require( './Retry' );
 
-function RequestQueue( superAgent ) {
+function requestQueue( params ) {
 
-	let Request = superAgent.Request;
-	let superAgentEnd = Request.prototype.end;
-	let queue = [];
+	const superagentEnd = this.end;
+	const options = Object.assign( {
+		queue: undefined, // Array
+		initialTimeout: 2000,
+		backoff: {
+			exp: {
+				factor: 1.4
+			},
+			retries: 5,
+			override: _computeWaitPeriod
+		}
+	}, params );
 
-	const TIMEOUT_REGEX = /timeout of \d+ms exceeded/;
-	const CORS_REGEX = /Origin is not allowed by Access-Control-Allow-Origin/;
+	this.queue = options.queue;
 
-	const EXP_FACTOR = 1.4;
-	const MAX_EXP_DROPOFF = 15;
-	const MAX_INITIAL_TIMEOUT_REPEAT = 5;
-
-	let initialRetryTimeout;
 	let retryCount = 0;
-	let repeatCount = 0;
 
-	//HACK to Reset request to allow retry
+	function _computeWaitPeriod( retryCount ) {
+		return Math.round( options.initialTimeout *
+			Math.pow( options.backoff.exp.factor, retryCount ) );
+	}
+
 	function _resetRequest( request, timeout ) {
 
 		let headers = {};
@@ -40,8 +46,7 @@ function RequestQueue( superAgent ) {
 		delete request.req;
 		delete request.xhr;
 
-		let headerKeys = Object.keys( headers );
-
+		const headerKeys = Object.keys( headers );
 		for( let i = 0; i < headerKeys.length; i++ ) {
 			request.set( headerKeys[i], headers[headerKeys[i]] );
 		}
@@ -59,119 +64,86 @@ function RequestQueue( superAgent ) {
 		}
 	}
 
-	function _shouldAttempRetry( err, retryEnabled ) {
-
-		if ( !retryEnabled || !err) {
-			return false;
-		}
-
-		let gatewayOrServiceUnavailable =
-				err.status && ( err.status === 502 || err.status === 503 || err.status === 504 );
-
-		let requestTimedOut = TIMEOUT_REGEX.test( err ) || err.code ==='ECONNABORTED';
-
-		if ( gatewayOrServiceUnavailable || requestTimedOut ) {
-			initialRetryTimeout = 2000;
-			return true;
-		}
-
-		let corsError = CORS_REGEX.test( err );
-
-		if ( corsError ) {
-			initialRetryTimeout = 5000;
-			return true;
-		}
-
-		return false;
-	}
-
 	function _sendNextRequest() {
 
-		let item = queue[0];
-
-		if ( !item) {
-			return;
+		const item = this.queue[0];
+		if ( item ) {
+			_sendRequest( item.request, item.fn, item.timeout );
 		}
 
-		_sendRequest( item.request, item.fn, item.timeout );
-	}
-
-	function _getTimeout( retryCount ) {
-		return Math.round( initialRetryTimeout * Math.pow( 1.5, retryCount ) );
 	}
 
 	function _sendRequest( request, fn, timeout ) {
 
-		superAgentEnd.call( request, ( err, res ) => {
+		superagentEnd.call( request, ( err, res ) => {
 
-			if ( _shouldAttempRetry( err, request.retryEnabled ) ) {
+			if ( request.retryEnabled && retry.should( err, res ) ) {
 
 				_handleConnectionError( request.connectionErrorHandler, err );
 
-				if ( repeatCount !== MAX_INITIAL_TIMEOUT_REPEAT ) {
-					repeatCount = repeatCount = repeatCount + 1;
-				}else if ( retryCount !== MAX_EXP_DROPOFF ) {
+				if ( retryCount !== options.backoff.retries ) {
 					retryCount = retryCount + 1;
 				}
 
-				let retryTimeout = _getTimeout( retryCount );
+				let retryWaitPeriod = options.backoff.override( retryCount );
 
 				setTimeout( function() {
 					_resetRequest( request, timeout );
 					_sendRequest( request, fn, request._timeout );
-				}, retryTimeout );
+				}, retryWaitPeriod );
+			} else {
+				retryCount = 0;
 
-				return;
+				_returnResponse( fn, err, res );
+
+				if ( request.queue ) {
+					request.queue.shift();
+					_sendNextRequest.call( request );
+				}
 			}
 
-			repeatCount = 0;
-			retryCount = 0;
-
-			_returnResponse( fn, err, res );
-
-			if ( request.queueRequest ) {
-				queue.shift();
-				_sendNextRequest();
-			}
 		});
 
 	}
 
-	Request.prototype.useQueue = function () {
-		this.queueRequest = true;
-		return this;
-	};
-
-	Request.prototype.retryOnConnectionFailure = function( connectionErrorHandler ) {
+	this.retryOnConnectionFailure = function( connectionErrorHandler ) {
 		this.retryEnabled = true;
 		this.connectionErrorHandler = connectionErrorHandler;
 		return this;
 	};
 
-	Request.prototype.end = function( fn ) {
+	this.end = function( fn ) {
 
-		let self = this;
-		let queueRequest = self.queueRequest;
+		if ( this.queue ) {
 
-		if ( queueRequest ) {
-
-			queue.push(
+			this.queue.push(
 				{
-					request: self,
+					request: this,
 					fn: fn,
-					timeout: self._timeout
+					timeout: this._timeout
 				}
 			);
 
-			if ( queue.length === 1 ) {
-				_sendNextRequest();
+			if ( this.queue.length === 1 ) {
+				_sendNextRequest.call(this);
 			}
-
-			return;
+		} else {
+			_sendRequest( this, fn, this._timeout );
 		}
 
-		_sendRequest( self, fn, self._timeout );
 	};
+
+	return this;
 }
 
-export default RequestQueue( SuperAgent );
+function create(params) {
+	return function(request) {
+		return requestQueue.call(request, params);
+	};
+};
+
+create.makeQueue = function() {
+	return [];
+};
+
+module.exports = create;

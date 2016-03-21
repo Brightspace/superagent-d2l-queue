@@ -5,43 +5,107 @@
 [![Coverage Status][coverage-image]][coverage-url]
 [![Dependency Status][dependencies-image]][dependencies-url]
 
-Extends Superagent by adding the ability to queue up requests and retry failed requests due to timeouts.
+Extends [Superagent](https://github.com/visionmedia/superagent) by adding the ability to queue up requests and retry failed requests due to timeouts.
 
 ## Installation
 
 Install from NPM:
 
 ```shell
-npm install superagent-d2l-queue
+npm install superagent-d2l-queue --save
 ```
 
 ## Usage
 
-Added functions:
+### `superagentQueue(options)`
 
-`useQueue()`
+```js
+const request = require( 'superagent' );
+const superagentQueue = require('superagent-d2l-queue');
 
-Every request that has this specified will be queued up.
+// ...
 
-`retryOnConnectionFailure( handler )`
+request
+    .get( ... )
+    .use( superagentQueue( ... ) )
+    .end( function( err, res ) {
+        // ...
+    });
+```
+
+__Options (defaults):__
+
+All parameters are optional
+```js
+{
+    queue: undefined, // use `superagentQueue.makeQueue()``
+    initialTimeout: 2000,
+    backoff: {
+        exp: { // Exponential backoff
+            factor: 1.4 //  (1.4 ^ retryCount)
+        },
+        retries: 5, // Number of retries
+        override: function( retryCount ) { // Compute the time between each retry interval.
+            return Math.round( initialTimeout *
+                Math.pow( backoff.exp.factor, retryCount ) );
+        }
+    }
+}
+```
+
+### `superagentQueue( { queue: superagentQueue.makeQueue() } )`
+Specify an Array that will be used as a queue to chain multiple Superagent requests. Only one request will execute at a time. This is similar to what can be done with libraries such as [Q](https://github.com/kriskowal/q).
+
+```js
+const request = require( 'superagent' );
+const superagentQueue = require('superagent-d2l-queue');
+
+// ...
+
+const queue = superagentQueue.makeQueue();
+
+const first = request
+    .get( ... )
+    .use( superagentQueue( { queue } ) )
+    .end( function( err, res ) {
+        // ...
+    });
+
+const second = request
+    .get( ... )
+    .use( superagentQueue( { queue } ) )
+    .end( function( err, res ) {
+        // ...
+    });
+
+const third = request
+    .get( ... )
+    .use( superagentQueue( { queue } ) )
+    .end( function( err, res ) {
+        // ...
+    });
+
+// etc...
+```
+
+### `retryOnConnectionFailure( handler )`
 
 When a request fails due to a timeout or connection failure the request will be retried every 2 seconds until it can successfully send the request. A handler function can be specified in order to complete some action whenever a timeout occurs. This handler is optional.
 
 ```js
-import Request from 'superagent';
-import 'superagent-d2l-queue';
+const request = require( 'superagent' );
+const superagentQueue = require('superagent-d2l-queue');
 
-Request
-	.get( '/me' )
-	.useQueue()
-	.retryOnConnectionFailure( function() {
-		//do something
-	})
-	.end( function( err,res ) {
-		//do something
-	});
+request
+    .get( ... )
+    .use( superagentQueue( ... ) )
+    .retryOnConnectionFailure( function() {
+        //do something
+    })
+    .end( function( err, res ) {
+        // ...
+    });
 ```
-
 
 [npm-url]: https://npmjs.org/package/superagent-d2l-queue
 [npm-image]: https://img.shields.io/npm/v/superagent-d2l-queue.png
