@@ -50,7 +50,7 @@ All parameters are optional
                 Math.pow( backoff.exp.factor, retryCount ) );
         }
     },
-    // Enabled request retry when a request has timed out.
+    // Enable request retry when a request has timed out.
     retryEnabled: false,
     // Callback function that will be called when a request has timedout and will be retried. This function
     // will not be called if retry is disabled
@@ -93,6 +93,23 @@ const third = request
 // etc...
 ```
 
+## Contributing
+
+1. **Fork** the repository. Committing directly against this repository is
+   highly discouraged.
+
+   2. Make your modifications in a branch, updating and writing new unit tests
+      as necessary in the `spec` directory.
+
+      3. Ensure that all tests pass with `npm test`
+
+      4. Submit a pull request to this repository. Wait for tests to run and someone
+         to chime in.
+
+### Code Style
+
+This repository is configured with [EditorConfig][EditorConfig] and [ESLint][ESLint] rules.
+
 [npm-url]: https://npmjs.org/package/superagent-d2l-queue
 [npm-image]: https://img.shields.io/npm/v/superagent-d2l-queue.png
 [ci-url]: https://travis-ci.org/Brightspace/superagent-d2l-queue
@@ -101,3 +118,5 @@ const third = request
 [coverage-image]: https://img.shields.io/coveralls/Brightspace/superagent-d2l-queue.svg
 [dependencies-url]: https://david-dm.org/brightspace/superagent-d2l-queue
 [dependencies-image]: https://img.shields.io/david/Brightspace/superagent-d2l-queue.svg
+[EditorConfig]: http://editorconfig.org/
+[ESLint]: https://github.com/eslint/eslint
