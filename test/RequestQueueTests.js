@@ -54,8 +54,7 @@ describe( 'RequestQueue', function() {
 
 			 var request = superagent
 							.get( '/' )
-							.use( superagentQueue() )
-							.retryOnConnectionFailure( handler );
+							.use( superagentQueue( { connectionErrorHandler: handler } ) );
 
 			 request.retryEnabled.should.be.true;
 			 request.connectionErrorHandler.should.equal( handler );
@@ -64,7 +63,7 @@ describe( 'RequestQueue', function() {
 		it( 'add queue', function() {
 			var request = superagent
 							.get( '/' )
-							.use( superagentQueue( { queue: [] } ) )
+							.use( superagentQueue( { queue: [] } ) );
 
 			request.queue.should.not.be.null;
 		});
@@ -75,7 +74,7 @@ describe( 'RequestQueue', function() {
 		beforeEach( function() {
 			concurrentRequests = 0;
 			retryRequests = 0;
-		})
+		});
 
 		it( 'no queue, 3 concurrent succesfull requests ', function( done ) {
 
@@ -212,18 +211,17 @@ describe( 'RequestQueue', function() {
 
 			var retryHandler = function( err ) {
 				err.code.should.equal( TIMEOUT_RESPONSE );
-			}
+			};
 
 			superagent
 				.get( 'http://localhost:5000/timeout' )
-				.use( superagentQueue( { queue: [] } ) )
-				.retryOnConnectionFailure( retryHandler )
+				.use( superagentQueue( { queue: [], connectionErrorHandler: retryHandler } ) )
 				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
 				});
-		})
+		});
 
 
 		it( 'no queue, request timed-out, expect successful retry', function( done ) {
@@ -232,18 +230,17 @@ describe( 'RequestQueue', function() {
 
 			var retryHandler = function( err ) {
 				err.code.should.equal( TIMEOUT_RESPONSE );
-			}
+			};
 
 			superagent
 				.get( 'http://localhost:5000/timeout' )
-				.use( superagentQueue() )
-				.retryOnConnectionFailure( retryHandler )
+				.use( superagentQueue( { connectionErrorHandler: retryHandler } ) )
 				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
 				});
-		})
+		});
 
 		it( 'use queue, gateway error, expect successful retry', function( done ) {
 
@@ -251,18 +248,17 @@ describe( 'RequestQueue', function() {
 
 			const retryHandler = function( err ) {
 				err.status.should.equal( 503 );
-			}
+			};
 
 			superagent
 				.get( 'http://localhost:5000/gatewayFailure' )
-				.use( superagentQueue( { queue: [] } ) )
-				.retryOnConnectionFailure( retryHandler )
+				.use( superagentQueue( { queue: [], connectionErrorHandler: retryHandler } ) )
 				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
 				});
-		})
+		});
 
 		function assert404andFailureCount( failureCount, expectedFailureCount, status ) {
 			failureCount.should.equal( expectedFailureCount );

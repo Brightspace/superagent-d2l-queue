@@ -14,10 +14,14 @@ function requestQueue( params ) {
 			},
 			retries: 5,
 			override: _computeWaitPeriod
-		}
+		},
+		connectionErrorHandler: null
 	}, params );
 
 	this.queue = options.queue;
+	this.connectionErrorHandler = options.connectionErrorHandler;
+	this.retryEnabled = options.connectionErrorHandler ? true : false;
+
 
 	let retryCount = 0;
 
@@ -105,12 +109,6 @@ function requestQueue( params ) {
 		});
 
 	}
-
-	this.retryOnConnectionFailure = function( connectionErrorHandler ) {
-		this.retryEnabled = true;
-		this.connectionErrorHandler = connectionErrorHandler;
-		return this;
-	};
 
 	this.end = function( fn ) {
 
