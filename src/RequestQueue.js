@@ -5,30 +5,35 @@ const retry = require( './Retry' );
 function requestQueue( params ) {
 
 	const superagentEnd = this.end;
-	const options = Object.assign( {
+
+	const options = Object.assign({
 		queue: undefined, // Array
-		initialTimeout: 2000,
-		backoff: {
-			exp: {
-				factor: 1.4
-			},
-			retries: 5,
-			override: _computeWaitPeriod
-		},
 		retryNotifier: undefined,
 		retryEnabled: false
 	}, params );
+
+	// Deep merge all the parameters so client does not need to provide
+	// the entire backoff object if they only want to tweak one parameter
+	const backoff = Object.assign({
+		initialTimeout: 2000,
+		maxTimeout: undefined,
+		expFactor: 1.4,
+		retries: 5,
+		override: _computeWaitPeriod
+	}, params.backoff );
+
+	options.backoff = backoff;
 
 	this.queue = options.queue;
 	this.retryNotifier = options.retryNotifier;
 	this.retryEnabled = options.retryEnabled;
 
-
 	let retryCount = 0;
+	let retryWaitPeriod = 0;
 
 	function _computeWaitPeriod( retryCount ) {
-		return Math.round( options.initialTimeout *
-			Math.pow( options.backoff.exp.factor, retryCount ) );
+		return Math.round( options.backoff.initialTimeout *
+			Math.pow( options.backoff.expFactor, retryCount ) );
 	}
 
 	function _resetRequest( request, timeout ) {
@@ -78,11 +83,15 @@ function requestQueue( params ) {
 
 				request.retryNotifier && request.retryNotifier( err );
 
-				if ( retryCount !== options.backoff.retries ) {
+				if ( retryCount !== options.backoff.retries
+					&& retryWaitPeriod < options.backoff.maxTimeout ) {
 					retryCount = retryCount + 1;
+					retryWaitPeriod = options.backoff.override( retryCount );
 				}
 
-				let retryWaitPeriod = options.backoff.override( retryCount );
+				if ( retryWaitPeriod > options.backoff.maxTimeout ) {
+					retryWaitPeriod = options.backoff.maxTimeout;
+				}
 
 				setTimeout( function() {
 					_resetRequest( request, timeout );
@@ -90,7 +99,7 @@ function requestQueue( params ) {
 				}, retryWaitPeriod );
 			} else {
 				retryCount = 0;
-
+				retryWaitPeriod = 0;
 				_returnResponse( fn, err, res );
 
 				if ( request.queue ) {

@@ -35,16 +35,16 @@ request
 
 __Options (defaults):__
 
-All parameters are optional
+All parameters are optional. The backoff parameter does need to include all parameters. Custom parameters will
+be merged with default parameters.
 ```js
 {
     queue: undefined, // use `superagentQueue.makeQueue()``
-    initialTimeout: 2000,
     backoff: {
-        exp: { // Exponential backoff
-            factor: 1.4 //  (1.4 ^ retryCount)
-        },
-        retries: 5, // Number of retries
+        initialTimeout: 2000, // Initial retry timeout
+        maxTimeout: undefined, // Max retry timeout
+        expFactor: 1.4 // Exponental backoff factor  (1.4 ^ retryCount)
+        retries: 5, // Number of retries, can be null to have infinite retries
         override: function( retryCount ) { // Compute the time between each retry interval.
             return Math.round( initialTimeout *
                 Math.pow( backoff.exp.factor, retryCount ) );
