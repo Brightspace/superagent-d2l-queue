@@ -54,10 +54,10 @@ describe( 'RequestQueue', function() {
 
 			 var request = superagent
 							.get( '/' )
-							.use( superagentQueue( { connectionErrorHandler: handler } ) );
+							.use( superagentQueue( { retryNotifier: handler, retryEnabled: true } ) );
 
 			 request.retryEnabled.should.be.true;
-			 request.connectionErrorHandler.should.equal( handler );
+			 request.retryNotifier.should.equal( handler );
 		});
 
 		it( 'add queue', function() {
@@ -215,7 +215,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/timeout' )
-				.use( superagentQueue( { queue: [], connectionErrorHandler: retryHandler } ) )
+				.use( superagentQueue( { queue: [], retryNotifier: retryHandler, retryEnabled: true } ) )
 				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
@@ -234,7 +234,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/timeout' )
-				.use( superagentQueue( { connectionErrorHandler: retryHandler } ) )
+				.use( superagentQueue( { retryNotifier: retryHandler, retryEnabled: true } ) )
 				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );
@@ -252,7 +252,7 @@ describe( 'RequestQueue', function() {
 
 			superagent
 				.get( 'http://localhost:5000/gatewayFailure' )
-				.use( superagentQueue( { queue: [], connectionErrorHandler: retryHandler } ) )
+				.use( superagentQueue( { queue: [], retryNotifier: retryHandler, retryEnabled: true } ) )
 				.timeout( 100 )
 				.end( function( err, res ) {
 					res.text.should.equal( SUCCESS_RESPONSE );

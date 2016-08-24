@@ -49,7 +49,12 @@ All parameters are optional
             return Math.round( initialTimeout *
                 Math.pow( backoff.exp.factor, retryCount ) );
         }
-    }
+    },
+    // Enabled request retry when a request has timed out.
+    retryEnabled: false,
+    // Callback function that will be called when a request has timedout and will be retried. This function
+    // will not be called if retry is disabled
+    retryNotifier: undefined
 }
 ```
 
@@ -86,25 +91,6 @@ const third = request
     });
 
 // etc...
-```
-
-### `retryOnConnectionFailure( handler )`
-
-When a request fails due to a timeout or connection failure the request will be retried every 2 seconds until it can successfully send the request. A handler function can be specified in order to complete some action whenever a timeout occurs. This handler is optional.
-
-```js
-const request = require( 'superagent' );
-const superagentQueue = require('superagent-d2l-queue');
-
-request
-    .get( ... )
-    .use( superagentQueue( ... ) )
-    .retryOnConnectionFailure( function() {
-        //do something
-    })
-    .end( function( err, res ) {
-        // ...
-    });
 ```
 
 [npm-url]: https://npmjs.org/package/superagent-d2l-queue

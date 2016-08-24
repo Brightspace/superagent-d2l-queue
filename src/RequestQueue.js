@@ -15,12 +15,13 @@ function requestQueue( params ) {
 			retries: 5,
 			override: _computeWaitPeriod
 		},
-		connectionErrorHandler: null
+		retryNotifier: undefined,
+		retryEnabled: false
 	}, params );
 
 	this.queue = options.queue;
-	this.connectionErrorHandler = options.connectionErrorHandler;
-	this.retryEnabled = options.connectionErrorHandler ? true : false;
+	this.retryNotifier = options.retryNotifier;
+	this.retryEnabled = options.retryEnabled;
 
 
 	let retryCount = 0;
@@ -57,15 +58,7 @@ function requestQueue( params ) {
 	}
 
 	function _returnResponse( fn, err, res ) {
-		if ( fn ) {
-			fn( err, res );
-		}
-	}
-
-	function _handleConnectionError( connectionErrorHandler, err ) {
-		if ( connectionErrorHandler ) {
-			connectionErrorHandler( err );
-		}
+		fn && fn( err, res );
 	}
 
 	function _sendNextRequest() {
@@ -83,7 +76,7 @@ function requestQueue( params ) {
 
 			if ( request.retryEnabled && retry.should( err, res ) ) {
 
-				_handleConnectionError( request.connectionErrorHandler, err );
+				request.retryNotifier && request.retryNotifier( err );
 
 				if ( retryCount !== options.backoff.retries ) {
 					retryCount = retryCount + 1;
