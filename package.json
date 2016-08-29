@@ -1,7 +1,7 @@
 {
   "name": "superagent-d2l-queue",
   "description": "Request queue extension on superagent",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "main": "lib/index.js",
   "scripts": {
     "prebuild": "npm run clean -s",
@@ -24,7 +24,7 @@
   "license": "Apache-2.0",
   "homepage": "https://github.com/Brightspace/superagent-d2l-queue",
   "dependencies": {
-    "superagent": "1.8.1"
+    "superagent": "^1.8.1"
   },
   "devDependencies": {
     "babel-cli": "^6.4.0",
