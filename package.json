@@ -1,7 +1,7 @@
 {
   "name": "superagent-d2l-queue",
   "description": "Request queue extension on superagent",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "main": "lib/index.js",
   "scripts": {
     "prebuild": "npm run clean -s",
@@ -38,5 +38,17 @@
     "rimraf": "^2.5.0",
     "should": "^8.1.1",
     "sinon": "^1.17.2"
+  },
+  "browserify" : {
+    "transform": [
+      [
+        "babelify",
+        {
+          "plugins": [
+            "transform-object-assign"
+          ]
+        }
+      ]
+    ]
   }
 }
