@@ -79,13 +79,15 @@ function requestQueue( params ) {
 
 		superagentEnd.call( request, ( err, res ) => {
 
-			if ( request.retryEnabled && retry.should( err, res ) ) {
+			const maxRetriesHit = retryCount === options.backoff.retries;
+
+			if ( request.retryEnabled && retry.should( err, res ) && !maxRetriesHit ) {
 
 				request.retryNotifier && request.retryNotifier( err );
 
-				if ( retryCount !== options.backoff.retries
-					&& retryWaitPeriod < options.backoff.maxTimeout ) {
-					retryCount = retryCount + 1;
+				retryCount = retryCount + 1;
+
+				if ( retryWaitPeriod < options.backoff.maxTimeout ) {
 					retryWaitPeriod = options.backoff.override( retryCount );
 				}
 

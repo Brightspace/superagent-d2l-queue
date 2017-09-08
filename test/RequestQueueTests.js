@@ -38,10 +38,14 @@ app.get( '/timeout', function( req, res ) {
 
 app.get( '/gatewayFailure', function( req, res ) {
 	retryRequests++;
-	if ( retryRequests > 2 ) {
+	if ( retryRequests > 5 ) {
 		res.status( 200 ).send( SUCCESS_RESPONSE );
 		return;
 	}
+	res.sendStatus( 503 );
+});
+
+app.get( '/maxRetryCount', function( req, res ) {
 	res.sendStatus( 503 );
 });
 
@@ -258,6 +262,38 @@ describe( 'RequestQueue', function() {
 					res.text.should.equal( SUCCESS_RESPONSE );
 					done();
 				});
+		});
+
+		it( 'use queue, max count of retries hit, request should fail', function( done ) {
+
+			this.timeout( 100000 );
+
+			const expectedRetryCount = 10;
+
+			let retryCount = 0;
+
+			const retryHandler = function() {
+				retryCount++;
+			};
+
+			superagent
+				.get( 'http://localhost:5000/maxRetryCount' )
+				.use(
+					superagentQueue({
+						queue: [],
+						retryNotifier: retryHandler,
+						retryEnabled: true,
+						backoff: { retries: expectedRetryCount }
+					})
+				)
+				.timeout( 100 )
+				.end( function( err, res ) {
+					should.exist( err );
+					res.statusCode.should.equal( 503 );
+					retryCount.should.equal( expectedRetryCount );
+					done();
+				});
+
 		});
 
 		function assert404andFailureCount( failureCount, expectedFailureCount, status ) {

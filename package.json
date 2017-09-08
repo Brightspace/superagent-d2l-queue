@@ -1,7 +1,7 @@
 {
   "name": "superagent-d2l-queue",
   "description": "Request queue extension on superagent",
-  "version": "3.0.2",
+  "version": "3.0.3",
   "main": "lib/index.js",
   "scripts": {
     "prebuild": "npm run clean -s",
@@ -39,7 +39,7 @@
     "should": "^8.1.1",
     "sinon": "^1.17.2"
   },
-  "browserify" : {
+  "browserify": {
     "transform": [
       [
         "babelify",
