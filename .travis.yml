@@ -4,8 +4,8 @@ node_js:
 sudo: false
 after_success:
 - npm run report-coverage
-- npm run build
 deploy:
+  skip_cleanup: true
   provider: npm
   email: d2ltravisdeploy@d2l.com
   api_key:
