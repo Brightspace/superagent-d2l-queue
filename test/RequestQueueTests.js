@@ -38,7 +38,7 @@ app.get( '/timeout', function( req, res ) {
 
 app.get( '/gatewayFailure', function( req, res ) {
 	retryRequests++;
-	if ( retryRequests > 5 ) {
+	if ( retryRequests > 2 ) {
 		res.status( 200 ).send( SUCCESS_RESPONSE );
 		return;
 	}
